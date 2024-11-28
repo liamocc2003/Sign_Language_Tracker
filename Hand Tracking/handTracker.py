@@ -1,38 +1,47 @@
 import cv2 as cv
+import imutils as imu
 import mediapipe as mp
 import time
 import datetime as dt
 import numpy as np
 import pyautogui as pagui
 import keyboard as kb
+from openpyxl import load_workbook as load_wb
 
 
 class HandTracker:
 
     def runTracker(createDataset, letter):
         #Create video capture
-        capture = cv.VideoCapture(0)
+        capture = cv.VideoCapture(1)
+        if not capture.isOpened():
+            print("\nExternal camera unable to connect.\nConnecting to internal webcam")
+            capture = cv.VideoCapture(0)
+            cv.setWindowProperty(WINDOW_NAME, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+
 
         #Set Window variables
         WINDOW_NAME = "Hand Recognition"
-
+        
         #MediaPipe hands
         mpHands = mp.solutions.hands
         hands = mpHands.Hands(False)
         mpDraw = mp.solutions.drawing_utils
 
         #Set Dataset Creation variables
-        count = 0
+        dataset_count = 0
 
         #Set FPS times
         fpsStartTime = 0
-        fpsEndTime = 0
 
 
         #Loop while running capture program
         while True:
             #Save image to variable
             isSuccess, image = capture.read()
+
+            #Resize image
+            image = imu.resize(image, width = 500)
 
 
             #Sharpen Image
@@ -48,10 +57,15 @@ class HandTracker:
             if results:
                 #for each point on the hand
                 for handLandmarks in results:
+                    #init coord array
+                    list_of_coords = []
+
                     #for each 
                     for id, landmark in enumerate(handLandmarks.landmark):
                         height, width, coord = sharpenImage.shape
                         coordX, coordY = int(landmark.x * width), int(landmark.y * height)
+
+                        list_of_coords.extend([coordX, coordY])
                         
                         cv.circle(sharpenImage, (coordX, coordY), 10, (0, 0, 0), cv.FILLED)
                         
@@ -59,15 +73,15 @@ class HandTracker:
 
 
                 #Take Image for Creating Dataset
-                count = HandTracker.createDataset(createDataset, letter, count)
+                if (createDataset == True):
+                    dataset_count = HandTracker.createDataset(letter, dataset_count, list_of_coords)
 
             
             #Show FPS
             fpsStartTime = HandTracker.FPSCounter(sharpenImage, fpsStartTime)
 
-
+            
             cv.imshow(WINDOW_NAME, sharpenImage)
-            cv.moveWindow(WINDOW_NAME, 650, 250)
             cv.setWindowProperty(WINDOW_NAME, cv.WND_PROP_TOPMOST, 1)
 
 
@@ -105,15 +119,29 @@ class HandTracker:
         return fpsStartTime
     
 
-    def createDataset(createDataset, letter, count):
+    def createDataset(letter, count, list_of_coords):
         #Get current time
         currentDatetime = dt.datetime.now()
         currentSecond = int(currentDatetime.strftime("%S"))
 
-        if (createDataset == 'y'):
-            if (currentSecond % 5 == 0):
-                pagui.screenshot(letter + str(count) + ".png")
-                count = count + 1
-                time.sleep(1)
-            
-            return count
+        if (currentSecond % 5 == 0):
+            pagui.screenshot(r"C:\Users\liamo\Documents\FYP\Training NN\Datasets\Personal Dataset\\" + letter + str(count) + ".png")
+            count = count + 1
+            HandTracker.addToExcel(letter, list_of_coords)
+            cv.waitKey(1000)
+        
+        return count
+        
+
+    def addToExcel(letter, list_of_coords):
+        dataset_path = r"Training NN\Datasets\Personal Dataset"
+        excel_file = dataset_path + r"\personal_dataset.xlsx"
+
+        workbook = load_wb(excel_file)
+        worksheet = workbook.active
+
+        list_of_coords.insert(0, letter)
+        list_of_coords.append(dataset_path + "\\" + letter + "1.png")
+
+        worksheet.append(list_of_coords)
+        workbook.save(excel_file)
