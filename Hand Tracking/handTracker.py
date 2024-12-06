@@ -15,8 +15,11 @@ class HandTracker:
         #Create video capture
         capture = cv.VideoCapture(1)
         if not capture.isOpened():
-            print("\nExternal camera unable to connect.\nConnecting to internal webcam")
+            print("External camera unable to connect. Connecting to internal webcam...")
             capture = cv.VideoCapture(0)
+            if not capture.isOpened():
+                print("Internal camera not available. Please connect a camera to continue. \nExiting...")
+                return 0
             cv.setWindowProperty(WINDOW_NAME, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
 
