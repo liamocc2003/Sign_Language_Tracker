@@ -35,7 +35,9 @@ def runTracker():
         create_dataset = False
         letter = ""
 
-    HandTracker.runTracker(create_dataset, letter)
+    exitstatus = HandTracker.runTracker(create_dataset, letter)
+    if exitstatus == 0:
+        form.destroy()
 
 
 ### Create tkinter form
