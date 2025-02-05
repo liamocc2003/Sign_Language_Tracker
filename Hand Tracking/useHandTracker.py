@@ -5,23 +5,32 @@ import tkinter as tk
 
 
 ### tkinter functions
+#Choose whether to add to dataset
 def dataset_toggle():
     if add_dataset.get() == 1:
         #Checkbox is selected
         letter_label.config(state = "normal")
         letter_entry.config(state = "normal")
+        letter_entry.focus()
     else:
         #Checkbox is not selected
         letter_label.config(state = "disabled")
         letter_entry.config(state = "disabled")
+        tracker_btn.focus()
 
 
+#Run the hand tracker
 def runTracker():
     if add_dataset.get() == 1:
         create_dataset = True
         letter = letter_entry.get()
         letter = letter.capitalize()
 
+        letter_length = len(letter)
+        if letter_length != 1:
+            print("No letter provided. \nPlease enter a letter when adding to the dataset.")
+            return
+        
     else:
         create_dataset = False
         letter = ""
@@ -48,7 +57,7 @@ expand_dataset_checkbox = tk.Checkbutton(
 )
 
 #Choose Letter
-letter_label = tk.Label(form, text = "Enter the letter you want", state = "disabled")
+letter_label = tk.Label(form, text = "Enter the letter you want:", state = "disabled")
 letter_entry = tk.Entry(form, textvariable = "", state = "disabled")
 
 #Run Tracker Btn
