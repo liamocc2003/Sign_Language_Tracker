@@ -140,12 +140,10 @@ class HandTracker:
         workbook = load_wb(excel_file)
         worksheet = workbook[letter]
         row_count = str(worksheet.max_row - 1)
-        print(row_count)
 
         #Screenshot window
         ss = pyss.grab(bbox = (x1, y1, x2, y2))
-        ss.save(r"C:\Users\liamo\Documents\FYP\Training NN\Datasets\Personal Dataset\\" + letter + row_count + ".png")
-        
+        ss.save(r"C:\Users\liamo\Documents\FYP\Training NN\Datasets\Personal Dataset\\" + letter + "\\" + letter + row_count + ".png")
 
         #Add to excel sheet
         HandTracker.addToExcel(letter, row_count, list_of_coords, excel_file)
@@ -165,7 +163,6 @@ class HandTracker:
         worksheet = workbook[letter]
 
         #Insert new coords
-        list_of_coords.insert(0, letter)
         list_of_coords.append(dataset_path + "\\" + letter + row_count + ".png")
 
         worksheet.append(list_of_coords)
