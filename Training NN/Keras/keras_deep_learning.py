@@ -1,20 +1,22 @@
-import time
-#Get start timer for model
-start_time = int(time.time())
-
-import numpy as np
-import os
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-
-import matplotlib.pyplot as plt
+from os import environ, remove
+environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+from time import time
+from numpy import array, ndenumerate
 from openpyxl import load_workbook as load_wb
-
 from keras.models import Sequential
-from keras import Input
-from keras.layers import Dense, Dropout, Activation, Flatten, Convolution2D, MaxPooling2D
+from keras import Input, saving
+from keras.layers import Dense, Dropout, Flatten, Convolution2D
 from keras.utils import to_categorical
 
+#Get start timer for model
+start_time = int(time())
+
+
 class KerasDeepLearning():
+    def __init__(self):
+        pass
+
+    
     # Get data from Excel file
     def get_points_from_excel():
 
@@ -80,19 +82,19 @@ class KerasDeepLearning():
         y_train = []
         y_test = []
 
-        for letter in range(len(all_points_in_dataset)):
-            for data_row in range(len(all_points_in_dataset[letter])):
-                if data_row < (len(all_points_in_dataset[letter]) - 2):
-                    x_train.append(all_points_in_dataset[letter][data_row][0:21])
-                    y_train.append(all_points_in_dataset[letter][data_row][21])
+        for letter in range(len(list_of_points)):
+            for data_row in range(len(list_of_points[letter])):
+                if data_row < (len(list_of_points[letter]) - 2):
+                    x_train.append(list_of_points[letter][data_row][0:21])
+                    y_train.append(list_of_points[letter][data_row][21])
                 else:
-                    x_test.append(all_points_in_dataset[letter][data_row][0:21])
-                    y_test.append(all_points_in_dataset[letter][data_row][21])
+                    x_test.append(list_of_points[letter][data_row][0:21])
+                    y_test.append(list_of_points[letter][data_row][21])
         
-        x_train = np.array(x_train)
-        y_train = np.array(y_train)
-        x_test = np.array(x_test)
-        y_test = np.array(y_test)
+        x_train = array(x_train)
+        y_train = array(y_train)
+        x_test = array(x_test)
+        y_test = array(y_test)
 
         # print("Train Points:", x_train)
         # print("Train Letter:", y_train, "\nLength:", len(y_train))
@@ -152,7 +154,7 @@ class KerasDeepLearning():
     def fit_model(model, x_train, y_train, x_test, y_test, start_time):
         num_of_epochs = 200
 
-        model.fit(x_train, y_train, batch_size = 8, epochs = num_of_epochs, verbose = 1)
+        model.fit(x_train, y_train, batch_size = 8, epochs = num_of_epochs, verbose = 0)
 
         KerasDeepLearning.evaluate_model(model, x_test, y_test, start_time)
 
@@ -164,10 +166,10 @@ class KerasDeepLearning():
         score = model.evaluate(x_test, y_test, verbose = 0)
 
         # Get total time model takes
-        end_time = int(time.time())
+        end_time = int(time())
         total_time_model_takes = end_time - start_time
         print()
-        print("Model takes", total_time_model_takes , "seconds")
+        print("Model took", total_time_model_takes , "seconds.")
 
         print()
         print("Test values obtained using model:")
@@ -176,22 +178,73 @@ class KerasDeepLearning():
         if (score[1] * 100) > 90:
             KerasDeepLearning.save_model(model)
             print()
-            print("Model saved.")
+            print("New model saved.")
 
         return score
     
 
     # Save model for future use
     def save_model(model):
-        model.save("Training NN\keras_deep_learning_model.keras")
+        file_name = r"Training NN\Keras\keras_deep_learning_model.keras"
+
+        print()
+        try:
+            remove(file_name)
+            print("Old model deleted.")
+        except:
+            print("Model file not found.")
+
+        model.save(file_name)
+
+    
+    # Load model for real-time usage
+    def load_model():
+        file_name = r"Training NN\Keras\keras_deep_learning_model.keras"
+        
+        model = saving.load_model(file_name)
+
+        return model
+    
+
+    # Predict sign using model
+    def predict_sign(model, list_of_points):
+        ind_point = []
+        list_to_np = []
+
+        for point in range(len(list_of_points)):
+            ind_point.append(list_of_points[point])
+
+            if point % 2 == 1:
+                list_to_np.append(ind_point)
+
+                ind_point = []
+
+        np_list_of_points = array(list_to_np, ndmin = 3)
+
+        model = KerasDeepLearning.load_model()
+
+        letter_prediction = model.predict(np_list_of_points, verbose = 0)
+        letter = ""
+
+        for letter_as_int, if_true in ndenumerate(letter_prediction):
+            if_true = int(if_true)
+
+            if if_true == 1:
+                letter_as_int = letter_as_int[1]
+                letter = chr(letter_as_int + 65)
+        
+        return letter
 
 
-all_points_in_dataset = KerasDeepLearning.get_points_from_excel()
-x_train, y_train, x_test, y_test = KerasDeepLearning.split_data_into_train_and_test(all_points_in_dataset)
+def test_keras():
+    all_points_in_dataset = KerasDeepLearning.get_points_from_excel()
+    x_train, y_train, x_test, y_test = KerasDeepLearning.split_data_into_train_and_test(all_points_in_dataset)
 
-x_train, x_test = KerasDeepLearning.preprocess_data(x_train, x_test)
-y_train, y_test = KerasDeepLearning.preprocess_labels(y_train, y_test)
+    x_train, x_test = KerasDeepLearning.preprocess_data(x_train, x_test)
+    y_train, y_test = KerasDeepLearning.preprocess_labels(y_train, y_test)
 
-model = KerasDeepLearning.model_architecture()
-model = KerasDeepLearning.compile_model(model)
-model = KerasDeepLearning.fit_model(model, x_train, y_train, x_test, y_test, start_time)
+    model = KerasDeepLearning.model_architecture()
+    model = KerasDeepLearning.compile_model(model)
+    model = KerasDeepLearning.fit_model(model, x_train, y_train, x_test, y_test, start_time)
+
+#test_keras()
