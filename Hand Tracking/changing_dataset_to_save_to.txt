@@ -1,0 +1,7 @@
+To change which dataset is saved when spliting data into 
+personal dataset and test dataset, change the name of the 
+handTracker.py file.
+
+Ex. To change from saving to the personal dataset to the test dataset
+Change the name of handTracker.py to handTracker_personal_dataset.py,
+then change the handTracker_test_dataset.py to handTracker.py.
