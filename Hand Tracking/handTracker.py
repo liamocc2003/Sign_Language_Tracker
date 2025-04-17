@@ -39,10 +39,6 @@ class HandTracker:
         # Timer for taking pictures to add to database
         end_timer_for_dataset = time() + 7 #Add 7 seconds to current time
 
-        # Load Keras model
-        model = KerasDeepLearning.load_model()
-
-
         # Loop while running capture program
         while True:
             # Save image to variable
@@ -82,7 +78,7 @@ class HandTracker:
 
                 # Check coords on model to predict letter
                 if useKeras == True:
-                    letter = HandTracker.predictUsingKeras(window_width, sharpenImage, model, list_of_coords, letter)
+                    letter = HandTracker.predictUsingKeras(window_width, sharpenImage, list_of_coords, letter)
 
 
                 # Take Image for Creating Dataset
@@ -163,7 +159,7 @@ class HandTracker:
         workbook.save(excel_file_path)
 
 
-    def predictUsingKeras(window_width, image, model, list_of_coords, letter):
+    def predictUsingKeras(window_width, image, list_of_coords, letter):
         predict_letter_timer = int(time())
 
         letter_box_width = 50
@@ -172,7 +168,7 @@ class HandTracker:
         letter_box_y_point = 800
 
         if predict_letter_timer % 2 == 0:
-            letter = KerasDeepLearning.predict_sign(model, list_of_coords)
+            letter = KerasDeepLearning.predict_sign(list_of_coords)
         
         letter_box = rectangle(image, (letter_box_x_point, letter_box_y_point), ((letter_box_x_point + letter_box_width), (letter_box_y_point + letter_box_height)), (0, 0, 0), -1)
         putText(letter_box, letter, ((letter_box_x_point + 5), (letter_box_y_point + 47)), FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 5)
