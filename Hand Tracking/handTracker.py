@@ -16,7 +16,7 @@ from keras_deep_learning import KerasDeepLearning
 
 
 class HandTracker:
-    def runTracker(createDataset, useKeras, letter):
+    def runTracker(createDataset, useKeras, letter, hand):
         # Set Window variables
         WINDOW_NAME = "Hand Recognition"
         window_width = 500
@@ -74,7 +74,12 @@ class HandTracker:
                         # circle(sharpenImage, (coordX, coordY), 10, (0, 0, 0), FILLED)
                         
                     # mpDraw.draw_landmarks(sharpenImage, handLandmarks, mpHands.HAND_CONNECTIONS)
-
+                
+                # Swap points on the y-axis
+                if hand == 2:
+                    for index in range(len(list_of_coords)):
+                        if (index % 2) == 0:
+                            list_of_coords[index] = list_of_coords[index] * -1
 
                 # Check coords on model to predict letter
                 if useKeras == True:

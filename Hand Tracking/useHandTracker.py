@@ -2,7 +2,7 @@ from os import environ
 environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 from handTracker import HandTracker
 from tkinter import Tk, messagebox
-from tkinter import Label, IntVar, Checkbutton, Entry, Button
+from tkinter import Label, IntVar, Checkbutton, Radiobutton, Entry, Button
 from screeninfo import get_monitors
 
 
@@ -37,8 +37,9 @@ def toggle_keras_model():
 
 # Run the hand tracker
 def runTracker():
-    create_dataset = False
     use_keras = False
+    hand = False
+    create_dataset = False
     letter = ""
 
     if add_dataset.get() == 1:
@@ -58,9 +59,10 @@ def runTracker():
 
     elif use_keras_model.get() == 1:
         use_keras = True
+        hand = use_hand.get()
 
 
-    exitstatus = HandTracker.runTracker(create_dataset, use_keras, letter)
+    exitstatus = HandTracker.runTracker(create_dataset, use_keras, letter, hand)
     if exitstatus == 0:
         form.destroy()
 
@@ -86,7 +88,11 @@ form.geometry(str(form_width) + "x" + str(form_height) + "+" + str(form_x_positi
 ## Create Form Objects
 font_name = "Helvetica"
 # Title
-title_label = Label(form, text = "Hand Tracker", font = (font_name, 20, 'bold'))
+title_label = Label(
+    form, 
+    text = "Hand Tracker", 
+    font = (font_name, 20, 'bold')
+)
 
 
 # Use Keras Model
@@ -97,6 +103,32 @@ use_keras_model_checkbox = Checkbutton(
     font = (font_name, 14),
     variable = use_keras_model, 
     command = toggle_keras_model
+)
+
+
+# Choose hand
+choose_hand_label = Label(
+    form,
+    text = "Choose your dominant hand:",
+    font = (font_name, 14)
+)
+
+use_hand = IntVar()
+use_hand.set(1)
+right_hand = Radiobutton(
+    form, 
+    text = "Right", 
+    variable = use_hand, 
+    value = 1,
+    font = (font_name, 13)
+)
+
+left_hand = Radiobutton(
+    form, 
+    text = "Left", 
+    variable = use_hand, 
+    value = 2,
+    font = (font_name, 13)
 )
 
 
@@ -111,20 +143,43 @@ expand_dataset_checkbox = Checkbutton(
 )
 
 # Choose Letter
-letter_label = Label(form, text = "Enter the letter you want:", state = "disabled", font = (font_name, 12))
-letter_entry = Entry(form, textvariable = "", state = "disabled", bd = 3, font = (font_name, 12), width = 10)
+letter_label = Label(
+    form, 
+    text = "Enter the letter you want:", 
+    state = "disabled", 
+    font = (font_name, 12)
+)
+letter_entry = Entry(
+    form, 
+    textvariable = "", 
+    state = "disabled", 
+    bd = 3, 
+    font = (font_name, 12), 
+    width = 10
+)
 
 
 # Run Tracker Btn
-tracker_btn = Button(form, text = "Run Tracker", command = runTracker, width = 15, height = 2, bd = 5, font = (font_name, 10, 'bold'))
+tracker_btn = Button(
+    form, 
+    text = "Run Tracker", 
+    command = runTracker, 
+    width = 15, 
+    height = 2, 
+    bd = 5, 
+    font = (font_name, 10, 'bold')
+)
 
 
 ## Add Form Objects
 title_label.place(x = 110, y = 10)
 use_keras_model_checkbox.place(x = 20, y = 70)
-expand_dataset_checkbox.place(x = 20, y = 185)
-letter_label.place(x = 40, y = 225)
-letter_entry.place(x = 50, y = 250)
+choose_hand_label.place(x = 50, y = 160)
+right_hand.place(x = 70, y = 190)
+left_hand.place(x = 170, y = 190)
+expand_dataset_checkbox.place(x = 20, y = 285)
+letter_label.place(x = 40, y = 325)
+letter_entry.place(x = 50, y = 350)
 tracker_btn.place(x = 140, y = 430)
 
 
