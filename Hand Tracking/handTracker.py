@@ -2,7 +2,7 @@ from os import environ
 environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 from sys import path
 path.append('C:/Users/liamo/Documents/FYP/Training NN/Keras')
-from cv2 import VideoCapture, setWindowProperty, cvtColor, imshow, waitKey, destroyAllWindows, filter2D, rectangle, putText, circle
+from cv2 import VideoCapture, setWindowProperty, cvtColor, imshow, waitKey, destroyAllWindows, filter2D, rectangle, putText, circle, getWindowImageRect
 from cv2 import WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN, COLOR_BGR2RGB, WND_PROP_TOPMOST, FILLED, FONT_HERSHEY_PLAIN
 from mediapipe import solutions
 from time import time
@@ -31,10 +31,14 @@ class HandTracker:
         # MediaPipe hands
         mpHands = solutions.hands
         hands = mpHands.Hands(False)
-        mpDraw = solutions.drawing_utils
+        # mpDraw = solutions.drawing_utils
 
         # Set Dataset Creation variables
         dataset_count = 0
+
+
+        # Word init
+        word = ""
         
         # Timer for taking pictures to add to database
         end_timer_for_dataset = time() + 7 #Add 7 seconds to current time
@@ -44,8 +48,16 @@ class HandTracker:
             # Save image to variable
             isSuccess, image = capture.read()
 
+
             # Resize image
             image = resize(image, width = window_width)
+            window_height = 888
+
+
+            # Word spelling
+            letter_box_height = 100
+            letter_box_x_point = 0
+            letter_box_y_point = window_height - letter_box_height
 
 
             # Sharpen Image
@@ -56,6 +68,10 @@ class HandTracker:
             imageRGB = cvtColor(sharpenImage, COLOR_BGR2RGB)
             imageProcess = hands.process(imageRGB)
             results = imageProcess.multi_hand_landmarks
+
+
+            # Spelling box
+            letter_box = rectangle(sharpenImage, (letter_box_x_point, letter_box_y_point), (window_width, window_height), (0, 0, 0), -1)
 
 
             if results:
@@ -75,15 +91,17 @@ class HandTracker:
                         
                     # mpDraw.draw_landmarks(sharpenImage, handLandmarks, mpHands.HAND_CONNECTIONS)
                 
-                # Swap points on the y-axis
+
+                # Swap points on the y-axis if left handed
                 if hand == 2:
                     for index in range(len(list_of_coords)):
                         if (index % 2) == 0:
                             list_of_coords[index] = list_of_coords[index] * -1
 
+
                 # Check coords on model to predict letter
                 if useKeras == True:
-                    letter = HandTracker.predictUsingKeras(window_width, sharpenImage, list_of_coords, letter)
+                    word = HandTracker.predictUsingKeras(letter_box, letter_box_y_point, window_width, list_of_coords, word)
 
 
                 # Take Image for Creating Dataset
@@ -95,6 +113,7 @@ class HandTracker:
 
             
             imshow(WINDOW_NAME, sharpenImage)
+            # print(getWindowImageRect(WINDOW_NAME))
             setWindowProperty(WINDOW_NAME, WND_PROP_TOPMOST, 1)
 
 
@@ -164,18 +183,19 @@ class HandTracker:
         workbook.save(excel_file_path)
 
 
-    def predictUsingKeras(window_width, image, list_of_coords, letter):
+    def predictUsingKeras(letter_box, y_point, window_width, list_of_coords, word):
         predict_letter_timer = int(time())
-
-        letter_box_width = 50
-        letter_box_height = 50
-        letter_box_x_point = int((window_width - letter_box_width) / 2)
-        letter_box_y_point = 800
 
         if predict_letter_timer % 2 == 0:
             letter = KerasDeepLearning.predict_sign(list_of_coords)
-        
-        letter_box = rectangle(image, (letter_box_x_point, letter_box_y_point), ((letter_box_x_point + letter_box_width), (letter_box_y_point + letter_box_height)), (0, 0, 0), -1)
-        putText(letter_box, letter, ((letter_box_x_point + 5), (letter_box_y_point + 47)), FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 5)
+            word = word + letter
 
-        return letter
+        num_letters = len(word)
+        letter_pixel_length = 47
+        total_word_pixels = num_letters * letter_pixel_length
+
+        letter_start_x = int((window_width / 2) - (total_word_pixels / 2))
+
+        putText(letter_box, word, (letter_start_x, y_point + int(letter_pixel_length * 1.5)), FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 5)
+
+        return word
