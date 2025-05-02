@@ -135,15 +135,11 @@ class KerasDeepLearning():
         model.add(Input((21, 2, 1)))
 
         model.add(Convolution2D(32, (2, 2), activation = 'relu'))
-        model.add(Dropout(0.1))
 
         model.add(Flatten())
         model.add(Dense(128, activation = 'relu'))
-        model.add(Dropout(0.2))
         model.add(Dense(64, activation = 'relu'))
-        # model.add(Dropout(0.3))
         # model.add(Dense(32, activation = 'relu'))
-        model.add(Dropout(0.4))
         model.add(Dense(26, activation='softmax'))
         
         return model
@@ -179,7 +175,7 @@ class KerasDeepLearning():
 
         print()
         print("Test values obtained using model:")
-        print("Accuracy:", '{0:.2f}%'.format(score[1] * 100))
+        print("Accuracy:", '{0:.2f}%'.format(score[1] * 100), "\nLoss:", '{0:.2f}%'.format(score[0] * 100))
 
         if (score[1] * 100) > 85:
             KerasDeepLearning.save_model(model)
@@ -187,7 +183,7 @@ class KerasDeepLearning():
         else:
             print("Re-running model creation due to low test accuracy.")
             start_time = int(time())
-            test_keras()
+            test_keras(start_time)
 
         return score
     
@@ -201,7 +197,7 @@ class KerasDeepLearning():
             remove(file_name)
             print("Old model deleted.")
         except:
-            print("Model file not found.")
+            print("Old Model file not found.")
 
         model.save(file_name)
 
@@ -245,7 +241,7 @@ class KerasDeepLearning():
         return letter
 
 
-def test_keras():
+def test_keras(start_time):
     train_excel_file = r"Training NN\Datasets\Personal Dataset\personal_dataset.xlsx"
     test_excel_file = r"Training NN\Datasets\Test Data\test_dataset.xlsx"
 
@@ -264,4 +260,4 @@ def test_keras():
 
 
 if __name__ == "__main__":
-    test_keras()
+    test_keras(start_time)
